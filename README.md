@@ -12,13 +12,13 @@ Stop wasting time manually cleaning your "Downloads" or "Projects" folder—this
 
 ## Key Features
 
-* ** Intuitive GUI:** A clean and simple graphical interface built with Python's native Tkinter library.
-* ** Cross-Platform:** Packaged to run as a standalone native app on both **Windows (`.exe`)** and **macOS (`.app`)**.
-* ** Structure-Preserving Logic:** When organizing recursively, it creates category folders *inside* each subfolder (e.g., `Project/Notes/Images/`), keeping your original structure intact.
-* ** Fully Customizable:** Easily edit the `config.json` file to add new file types or create your own categories (e.g., "Ebooks", "Fonts").
-* ** One-Click Config:** A built-in **"Open Config Folder"** button instantly opens the correct system folder for you to edit the `config.json` file.
-* ** Recursive Organizing:** Optionally clean up files in all subfolders, not just the top level.
-* ** Activity Logging:** A real-time log in the app shows you exactly what's being moved, and a persistent `organizer.log` file is saved for troubleshooting.
+* Intuitive GUI:** A clean and simple graphical interface built with Python's native Tkinter library.
+* Cross-Platform:** Packaged to run as a standalone native app on both **Windows (`.exe`)** and **macOS (`.app`)**.
+* Structure-Preserving Logic:** When organizing recursively, it creates category folders *inside* each subfolder (e.g., `Project/Notes/Images/`), keeping your original structure intact.
+* Fully Customizable:** Easily edit the `config.json` file to add new file types or create your own categories (e.g., "Ebooks", "Fonts").
+* One-Click Config:** A built-in **"Open Config Folder"** button instantly opens the correct system folder for you to edit the `config.json` file.
+* Recursive Organizing:** Optionally clean up files in all subfolders, not just the top level.
+* Activity Logging:** A real-time log in the app shows you exactly what's being moved, and a persistent `organizer.log` file is saved for troubleshooting.
 
 ## Tech Stack
 
