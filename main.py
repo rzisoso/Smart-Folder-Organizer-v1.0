@@ -1,60 +1,125 @@
 import os
-import sys
 import shutil
 import json
 import logging
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
+import sys
+import platform  # Used to detect the operating system
+import subprocess # Used to open folders on different OSes
 
+# --- 1. Cross-platform Path and Application Settings ---
 
+APP_NAME = "SmartOrganizerPro"
 
-# --- 1. Logging Setup ---
-# Configure the logger to save log messages to organizer.log
+# This is the default config file content that will be created in the user config directory
+DEFAULT_CONFIG_CONTENT = """
+{
+  "file_type_mappings": {
+    "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".tiff"],
+    "Documents": [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".md"],
+    "Archives": [".zip", ".rar", ".7z", ".tar", ".gz"],
+    "Audio": [".mp3", ".wav", ".ogg", ".flac"],
+    "Videos": [".mp4", ".mov", ".avi", ".mkv"],
+    "Scripts": [".py", ".js", ".html", ".css", ".sh", ".json"]
+  }
+}
+"""
+
+def get_config_dir():
+    """Gets the cross-platform, user-specific configuration folder path."""
+    system = platform.system()
+    if system == "Windows":
+        # On Windows, place it alongside the .exe
+        if getattr(sys, 'frozen', False):
+            # Program is running as a bundled .exe
+            return os.path.dirname(sys.executable)
+        else:
+            # Development mode
+            return os.path.dirname(os.path.abspath(__file__))
+    elif system == "Darwin": # macOS
+        # On macOS, use the standard Application Support directory
+        return os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', APP_NAME)
+    else: # Linux
+        # On Linux, use the .config directory
+        return os.path.join(os.path.expanduser('~'), '.config', APP_NAME)
+
+def get_log_dir():
+    """Gets the cross-platform standard log folder path."""
+    system = platform.system()
+    if system == "Windows":
+        # Logs are placed alongside the .exe
+        return get_config_dir()
+    elif system == "Darwin": # macOS
+        # Use the standard Logs directory
+        return os.path.join(os.path.expanduser('~'), 'Library', 'Logs', APP_NAME)
+    else: # Linux
+        # Use the .cache directory
+        return os.path.join(os.path.expanduser('~'), '.cache', APP_NAME, 'logs')
+
+def get_config_file_path():
+    """
+    获取配置文件的完整路径。
+    如果文件不存在，会自动创建一份默认的。
+    """
+    config_dir = get_config_dir()
+    os.makedirs(config_dir, exist_ok=True) # Ensure the directory exists
+    config_path = os.path.join(config_dir, 'config.json')
+
+    if not os.path.exists(config_path):
+        # If config.json doesn't exist, create a default one
+        try:
+            with open(config_path, 'w', encoding='utf-8') as f:
+                f.write(DEFAULT_CONFIG_CONTENT)
+        except Exception as e:
+            # Use print() here, as logging might not be initialized yet
+            print(f"Failed to create default config file: {e}")
+            return None
+    
+    return config_path
+
+# --- 2. Logging Setup ---
+
+# Ensure log directory exists
+log_dir = get_log_dir()
+os.makedirs(log_dir, exist_ok=True)
+log_file_path = os.path.join(log_dir, 'organizer.log')
+
+# Configure logging
 logging.basicConfig(
-    filename='organizer.log',
+    filename=log_file_path,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    encoding='utf-8' # Use utf-8 to support non-ASCII characters in paths
+    encoding='utf-8'
 )
 
-
-# --- 2. Configuration Loading from JSON ---
-
-
-def get_config_path():
-    """
-    获取config.json的绝对路径。
-    这能确保在开发环境和PyInstaller打包后都能正确找到文件。
-    """
-    if getattr(sys, 'frozen', False):
-        #如果程序被打包了
-        application_path = os.path.dirname(sys.executable)
-    else:
-        #如果程序是在正常Python环境中运行
-        application_path = os.path.dirname(os.path.abspath(__file__))
-
-    return os.path.join(application_path, 'config.json')
-
+# --- 3. Load Configuration from JSON File ---
 
 def load_config():
-    """Loads the file type mapping configuration from a JSON file."""
-    config_file_path = get_config_path() 
+    """Loads file type mapping configuration from the user's config folder."""
+    config_file_path = get_config_file_path()
+    if not config_file_path:
+        logging.error("Config file path could not be determined.")
+        return None
+
     try:
         with open(config_file_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
-            # For consistency, convert all extensions to lowercase
             mappings = config.get("file_type_mappings", {})
             for category, extensions in mappings.items():
                 mappings[category] = [ext.lower() for ext in extensions]
             return mappings
     except FileNotFoundError:
-        logging.error(f"Configuration file '{config_file_path}' not found.")
+        logging.error(f"Configuration file '{config_file_path}' not found (this shouldn't happen).")
         return None
     except json.JSONDecodeError:
-        logging.error(f"Error decoding the configuration file '{config_file_path}'. Please check its format.")
+        logging.error(f"Error decoding config file '{config_file_path}'. Please check its format.")
+        return None
+    except Exception as e:
+        logging.error(f"Unknown error loading config: {e}")
         return None
 
-# --- 3. Core Organization Logic ---
+# --- 4. Core Organization Logic ---
 def organize_folder(folder_path, file_mappings, recursive, update_log_widget):
     """
     The core function that organizes the folder.
@@ -146,21 +211,21 @@ def process_file(current_folder, filename, file_mappings, summary_report, update
             logging.error(message)
             update_log_widget(message + "\n")
 
-# --- 4. Graphical User Interface (GUI) ---
+# --- 5. GUI Interface ---
 class OrganizerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Smart Folder Organizer")
-        self.root.geometry("600x450")
+        self.root.title("Smart Folder Organizer Pro")
+        self.root.geometry("650x450")
 
         # Frame for folder selection
         top_frame = tk.Frame(root, padx=10, pady=10)
         top_frame.pack(fill=tk.X)
 
-        tk.Label(top_frame, text="Target Folder:").pack(side=tk.LEFT)
+        tk.Label(top_frame, text="Target Folder:").pack(side=tk.LEFT, padx=(0, 5))
         self.folder_path_var = tk.StringVar()
-        tk.Entry(top_frame, textvariable=self.folder_path_var, width=50).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
-        tk.Button(top_frame, text="Browse...", command=self.browse_folder).pack(side=tk.LEFT)
+        tk.Entry(top_frame, textvariable=self.folder_path_var, width=50).pack(side=tk.LEFT, expand=True, fill=tk.X)
+        tk.Button(top_frame, text="Browse...", command=self.browse_folder).pack(side=tk.RIGHT, padx=(5, 0))
 
         # Frame for options and actions
         action_frame = tk.Frame(root, padx=10, pady=5)
@@ -168,6 +233,9 @@ class OrganizerApp:
         
         self.recursive_var = tk.BooleanVar()
         tk.Checkbutton(action_frame, text="Organize Subfolders (Recursive)", variable=self.recursive_var).pack(side=tk.LEFT)
+        
+        # --- New Feature Buttons ---
+        tk.Button(action_frame, text="Open Config Folder", command=self.open_config_folder).pack(side=tk.LEFT, padx=10)
         
         tk.Button(action_frame, text="Start Organizing", command=self.start_organization, bg="lightblue", font=('Helvetica', 10, 'bold')).pack(side=tk.RIGHT, padx=10)
 
@@ -180,30 +248,43 @@ class OrganizerApp:
         self.log_widget.pack(expand=True, fill=tk.BOTH)
 
     def browse_folder(self):
-        """Opens a dialog to select a folder."""
         folder_selected = filedialog.askdirectory()
         if folder_selected:
             self.folder_path_var.set(folder_selected)
 
     def update_log(self, message):
-        """Thread-safely updates the log widget in the GUI."""
         self.log_widget.config(state='normal')
         self.log_widget.insert(tk.END, message)
-        self.log_widget.see(tk.END) # Auto-scroll to the bottom
+        self.log_widget.see(tk.END)
         self.log_widget.config(state='disabled')
-        self.root.update_idletasks() # Refresh the UI
+        self.root.update_idletasks()
+
+    def open_config_folder(self):
+        """New: Opens the configuration folder in the system file explorer."""
+        config_dir = get_config_dir()
+        try:
+            system = platform.system()
+            if system == "Windows":
+                os.startfile(config_dir)
+            elif system == "Darwin": # macOS
+                subprocess.Popen(["open", config_dir])
+            else: # Linux
+                subprocess.Popen(["xdg-open", config_dir])
+            self.update_log(f"Opened config folder: {config_dir}\n")
+        except Exception as e:
+            self.update_log(f"Error opening config folder: {e}\n")
+            logging.error(f"Failed to open config folder: {e}")
 
     def start_organization(self):
-        """Starts the file organization process."""
-        # Clear the log widget
         self.log_widget.config(state='normal')
         self.log_widget.delete('1.0', tk.END)
         self.log_widget.config(state='disabled')
 
-        # Load configuration
         file_mappings = load_config()
         if file_mappings is None:
-            messagebox.showerror("Error", "Could not load 'config.json'. Please ensure the file exists and is correctly formatted.")
+            message = "Fatal Error: Could not load config.json. Check logs for details."
+            self.update_log(message + "\n")
+            messagebox.showerror("Error", message)
             return
         
         folder_path = self.folder_path_var.get()
@@ -216,16 +297,13 @@ class OrganizerApp:
         self.update_log("Starting organization...\n")
         self.update_log(f"Target Folder: {folder_path}\n")
         self.update_log(f"Recursive Mode: {'On' if is_recursive else 'Off'}\n")
+        self.update_log(f"Log file location: {log_file_path}\n")
         self.update_log("--------------------\n")
         
-        # For large numbers of files, running this in a separate thread
-        # would be a good improvement to prevent the UI from freezing.
-        # For simplicity, we call it directly here.
         result = organize_folder(folder_path, file_mappings, is_recursive, self.update_log)
 
         if result:
             summary_report, total_files = result
-            # Print the summary report
             summary_message = "\n--------------------\nOrganization Complete!\n"
             summary_message += f"Total files processed: {total_files}.\nSummary:\n"
             for category, count in summary_report.items():
@@ -234,10 +312,14 @@ class OrganizerApp:
             self.update_log(summary_message)
             messagebox.showinfo("Success", "Folder organization has been completed!")
         else:
-            messagebox.showerror("Failed", "An error occurred during organization. Please check organizer.log for details.")
+            self.update_log("Error during organization. Check log for details.\n")
+            messagebox.showerror("Failed", "An error occurred. Please check the log file for details.")
 
 
 if __name__ == "__main__":
+    # Ensure we log the application start before the mainloop
+    logging.info("Application started.")
     app_root = tk.Tk()
     app = OrganizerApp(app_root)
     app_root.mainloop()
+    logging.info("Application closed.")

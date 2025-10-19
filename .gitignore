@@ -1,0 +1,10 @@
+# PyInstaller
+build/
+dist/
+*.spec
+
+# macOS
+.DS_Store
+
+#Logs
+*.log
