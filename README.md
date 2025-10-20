@@ -27,7 +27,7 @@ Stop wasting time manually cleaning your "Downloads" or "Projects" folder—this
 * **PyInstaller** (for packaging into `.exe` and `.app`)
 * **Standard Libraries:** `os`, `shutil`, `json`, `logging`, `platform`, `subprocess`
 
-## How to Use (For End-Users)
+## How to Use
 
 This application is delivered as a standalone executable. No installation is needed.
 
