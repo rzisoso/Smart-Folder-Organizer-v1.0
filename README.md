@@ -31,12 +31,15 @@ Stop wasting time manually cleaning your "Downloads" or "Projects" folder—this
 
 This application is delivered as a standalone executable. No installation is needed.
 
-1.  Download the latest release (`SmartOrganizerPro.exe` for Windows or `SmartOrganizerPro.app` for macOS) from the [Releases Page](https://github.com/rzisoso/Smart-Folder-Organizer-Mac/releases/tag/v1.0).
-2.  (macOS Only) The first time you run it, you may need to **right-click the app icon and select "Open"** from the menu to bypass the security warning.
-3.  On first launch, the app automatically creates a default `config.json` file in your system's user configuration directory.
-4.  Click **"Browse..."** to select the folder you want to organize.
-5.  Check **"Organize Subfolders (Recursive)"** if you want it to also clean up all folders *inside* the one you selected.
-6.  Click **"Start Organizing"**.
+**For Windows Users:**
+1.  Download the `SmartOrganizerPro.exe` file from the [Releases Page](https://github.com/rzisoso/Smart-Folder-Organizer-v1.0/releases/tag/v1.0).
+2.  Place the `.exe` file in any folder and double-click it to run.
+
+**For macOS Users:**
+1.  Download the `SmartOrganizerPro.app.zip` file from the [Releases Page](https://github.com/rzisoso/Smart-Folder-Organizer-v1.0/releases/tag/v1.0).
+2.  **Double-click the `.zip` file** to unzip it. This will extract the `SmartOrganizerPro.app` file.
+3.  (Recommended) Drag the `SmartOrganizerPro.app` to your "Applications" folder.
+4.  The first time you run it, you must **right-click the app icon and select "Open"** from the menu to bypass the security warning.
 
 #### How to Customize Categories:
 
