@@ -59,8 +59,8 @@ def get_log_dir():
 
 def get_config_file_path():
     """
-    获取配置文件的完整路径。
-    如果文件不存在，会自动创建一份默认的。
+    Gets the full path to the configuration file.
+    If the file doesn't exist, it automatically creates a default one.
     """
     config_dir = get_config_dir()
     os.makedirs(config_dir, exist_ok=True) # Ensure the directory exists
